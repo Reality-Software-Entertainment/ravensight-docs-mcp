@@ -51,7 +51,7 @@ ACM/Route53/S3/CloudWatch resources. Default region is us-east-1; pass
 - GET `/mcp` is deliberately 405; requests use POST, and OPTIONS supports browser
   clients. Subscriptions and resumable server-sent streams are not supported.
   Browser origins can access this public, credential-free surface via CORS.
-- DNS/TLS, IAM failures, throttling, and source-CND failures are distinct operational
+- DNS/TLS, IAM failures, throttling, and source-CDN failures are distinct operational
   failure modes. Check `/health`, stack events, API metrics, and Lambda logs before
   changing application code. Avoid logging request bodies or documentation queries.
 

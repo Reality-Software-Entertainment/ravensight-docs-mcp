@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "node src/local.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
     "build": "node scripts/build.mjs"
   },
   "dependencies": {
