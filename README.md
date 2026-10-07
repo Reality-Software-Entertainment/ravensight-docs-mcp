@@ -52,7 +52,7 @@ relevant sections, cite them, and compare with the SDK installed in this project
   optional exact section filter. Returns excerpts, IDs, source links, and revisions.
 - `get_doc(id, offset?, max_chars?, revision?)`: Markdown with code and tables,
   default 12,000 characters, maximum 20,000. Follow `next_offset` with the returned
-  document revision. A changed revision is an error so pages cannot silently mix.
+  document revision (required after offset 0). A changed revision is an error so pages cannot silently mix.
 - `ravensight-docs://index`: catalog of available IDs and section names.
 - Individual resources listed by the server: bounded document content in JSON,
   with the same continuation metadata as `get_doc`.

@@ -27,6 +27,7 @@ export function getDoc(catalog, { id, offset = 0, max_chars = 12000, revision })
   if (!doc) throw new Error('Unknown document ID. Use search_docs or the docs index to find a valid ID.');
   if (revision && revision !== doc.revision) throw new Error('Document changed since the previous page. Restart at offset 0 without a revision.');
   if (offset >= doc.content.length && offset !== 0) throw new Error('Offset is outside this document.');
+  if (offset > 0 && !revision) throw new Error('Supply the returned document revision when continuing at a nonzero offset.');
   const end = Math.min(doc.content.length, offset + max_chars);
   return { ...doc, content: doc.content.slice(offset, end), offset, total_chars: doc.content.length, next_offset: end < doc.content.length ? end : null };
 }

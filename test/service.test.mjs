@@ -36,6 +36,7 @@ test('pagination reconstructs a record exactly and refuses obsolete revisions', 
   assert.throws(() => getDoc(fixture, { id: doc.id, revision: '0'.repeat(64) }), /changed/);
   assert.throws(() => getDoc(fixture, { id: doc.id, offset: doc.content.length+1 }), /outside/);
   assert.throws(() => getDoc(fixture, { id: '../../secret' }), /Unknown/);
+  assert.throws(() => getDoc(fixture, { id: doc.id, offset: 1 }), /Supply the returned/);
 });
 
 test('cache coalesces refreshes, marks stale results, and expires safely during outages', async () => {
