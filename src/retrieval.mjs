@@ -1,20 +1,29 @@
+const DERIVED = 0.3;
 const STOP = new Set('a an the to of and or for in on how do i my our we with is are can it this what does should use using'.split(' '));
 const ALIASES = { tracking: ['instrumentation', 'track'], instrument: ['instrumentation'], retries: ['retry'], cost: ['costs', 'pricing', 'limits'], billing: ['pricing', 'limits'], install: ['setup', 'quickstart'], javascript: ['sdk', 'http', 'api'], csharp: ['http', 'api'], location: ['level', 'track'], existing: ['audit', 'expand'] };
 function tokens(s) { return s.toLowerCase().match(/[\p{L}\p{N}_]+/gu) || []; }
 export function search(catalog, query, limit = 5, section) {
   const original = [...new Set(tokens(query).filter(t => !STOP.has(t)))].slice(0, 40);
   if (!original.length) return [];
-  const terms = [...new Set(original.flatMap(t => [t, ...t.split('_'), ...(ALIASES[t] || [])]))];
   const corpus = catalog.documents.map(d => ({ d, title: tokens(d.title + ' ' + d.id), body: tokens(d.content), section: tokens(d.section_title) }));
+  // Derived terms (aliases, `_` sub-tokens) count for a fraction (DERIVED) of a typed word; a typed word that already names a page skips alias expansion.
+  const weight = new Map(original.map(t => [t, 1]));
+  // A compound like rs_kind that exists verbatim somewhere is not split, so its halves cannot fill the ranks with noise.
+  const found = (t, where) => corpus.some(x => x[where].includes(t));
+  for (const t of original) for (const e of [...(found(t, 'title') || found(t, 'body') ? [] : t.split('_')), ...(found(t, 'title') ? [] : ALIASES[t] || [])]) if (!weight.has(e)) weight.set(e, DERIVED);
+  const terms = [...weight.keys()];
   const frequency = new Map(terms.map(t => [t, corpus.filter(x => x.title.includes(t) || x.body.includes(t)).length]));
   return corpus.filter(x => !section || x.d.section === section).map(x => {
     let score = 0;
     for (const term of terms) {
+      const w = weight.get(term);
       const tf = x.body.filter(t => t === term).length;
       const idf = Math.log(1 + corpus.length / (1 + frequency.get(term)));
-      score += idf * (x.title.includes(term) ? 7 : 0);
-      score += idf * (x.section.includes(term) ? 1 : 0);
-      score += idf * tf / (tf + 1.2 * (0.25 + 0.75 * x.body.length / 250));
+      score += w * idf * (x.title.includes(term) ? 7 : 0);
+      score += w * idf * (x.section.includes(term) ? 1 : 0);
+      score += w * idf * tf / (tf + 1.2 * (0.25 + 0.75 * x.body.length / 250));
+      // A rare typed word found as an exact body token (a method or field name) is a strong signal.
+      if (w === 1 && tf && frequency.get(term) <= 2) score += idf * 3;
     }
     if (x.d.content.toLowerCase().includes(query.toLowerCase())) score += 8;
     const idx = original.map(t => x.d.content.toLowerCase().indexOf(t)).filter(i => i >= 0).sort((a, b) => a-b)[0] ?? 0;
