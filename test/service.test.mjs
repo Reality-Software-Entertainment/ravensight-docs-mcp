@@ -20,8 +20,9 @@ test('validates the real public catalog and refuses corrupted content', () => {
 test('representative integration questions find the relevant public docs', () => {
   const cases = [
     ['Godot SDK setup', 'godot-sdk'], ['HTTP API event ingestion', 'http-api'],
-    ['audit expand existing tracking', 'instrumentation-skill'], ['level location track', 'run-sql'],
-    ['MCP pricing limits', 'limits'], ['Godot retry flush', 'godot-sdk']
+    ['audit expand existing tracking', 'instrumentation-skill'], ['level location track', 'dashboard'], ['run_sql events table columns', 'run-sql'],
+    ['MCP pricing limits', 'limits'], ['Godot retry flush', 'godot-sdk'],
+    ['JavaScript SDK install', 'javascript-sdk'], ['dispose flush setDeviceId', 'javascript-sdk']
   ];
   for (const [q, section] of cases) assert.ok(search(fixture, q, 5).some(d => d.section === section), q + ': ' + JSON.stringify(search(fixture,q,5).map(d=>d.id)));
   assert.deepEqual(search(fixture, 'zzzznotawordzzzz'), []);

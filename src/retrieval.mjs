@@ -1,5 +1,5 @@
 const STOP = new Set('a an the to of and or for in on how do i my our we with is are can it this what does should use using'.split(' '));
-const ALIASES = { tracking: ['instrumentation', 'track'], instrument: ['instrumentation'], retries: ['retry'], cost: ['costs', 'pricing', 'limits'], billing: ['pricing', 'limits'], install: ['setup', 'quickstart'], javascript: ['http', 'api'], csharp: ['http', 'api'], location: ['level', 'track'], existing: ['audit', 'expand'] };
+const ALIASES = { tracking: ['instrumentation', 'track'], instrument: ['instrumentation'], retries: ['retry'], cost: ['costs', 'pricing', 'limits'], billing: ['pricing', 'limits'], install: ['setup', 'quickstart'], javascript: ['sdk', 'http', 'api'], csharp: ['http', 'api'], location: ['level', 'track'], existing: ['audit', 'expand'] };
 function tokens(s) { return s.toLowerCase().match(/[\p{L}\p{N}_]+/gu) || []; }
 export function search(catalog, query, limit = 5, section) {
   const original = [...new Set(tokens(query).filter(t => !STOP.has(t)))].slice(0, 40);
