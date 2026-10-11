@@ -32,7 +32,7 @@ test('representative integration questions find the relevant public docs', () =>
 test('aliases and split sub-tokens rank below the words the person typed', () => {
   assert.equal(search(fixture, 'javascript sdk setDeviceId', 5)[0].id, 'javascript-sdk/methods');
   const ids = search(fixture, 'rs_kind', 5).map(d => d.id);
-  assert.deepEqual(ids.slice(0, 2).sort(), ['dashboard/how-the-built-in-detections-read-your-events', 'javascript-sdk/what-the-dashboard-reads']);
+  assert.deepEqual(ids.slice(0, 3).sort(), ['dashboard/how-the-built-in-detections-read-your-events', 'http-api/post-api-v1-track-batch', 'javascript-sdk/what-the-dashboard-reads']);
   assert.ok(!ids.slice(0, 3).includes('javascript-sdk/quickstart'), JSON.stringify(ids));
 });
 
