@@ -32,7 +32,14 @@ test('representative integration questions find the relevant public docs', () =>
 test('aliases and split sub-tokens rank below the words the person typed', () => {
   assert.equal(search(fixture, 'javascript sdk setDeviceId', 5)[0].id, 'javascript-sdk/methods');
   const ids = search(fixture, 'rs_kind', 5).map(d => d.id);
-  assert.deepEqual(ids.slice(0, 3).sort(), ['dashboard/how-the-built-in-detections-read-your-events', 'http-api/post-api-v1-track-batch', 'javascript-sdk/what-the-dashboard-reads']);
+  // The detections page is in the top three (the worked examples added in
+  // October 2026 made it longer, so a dense SDK page can edge it on score),
+  // and every top result names rs_kind in its own text, not through an alias.
+  assert.ok(ids.slice(0, 3).includes('dashboard/how-the-built-in-detections-read-your-events'), JSON.stringify(ids));
+  for (const id of ids.slice(0, 3)) {
+    const doc = fixture.documents.find(d => d.id === id);
+    assert.ok(doc && /rs_kind/.test(doc.content), `${id} does not mention rs_kind`);
+  }
   assert.ok(!ids.slice(0, 3).includes('javascript-sdk/quickstart'), JSON.stringify(ids));
 });
 
