@@ -83,9 +83,8 @@ off for 30 seconds and concurrent refreshes coalesce. `/health` returns 503 for
 stale/unavailable content and 200 only for fresh validated content.
 
 Requests are capped at 16 KiB. Catalog fetches are capped at 2 MiB and five seconds.
-Production API capacity is shared: 10 requests/second, burst 20, and five concurrent
-Lambda executions. AWS throttles are best-effort service limits, not a strict billing
-cap. On 429, retry with exponential backoff and jitter. GET `/mcp` returns 405 by
+Production capacity is shared across all callers and rate limited on a best-effort
+basis. On 429, retry with exponential backoff and jitter. GET `/mcp` returns 405 by
 design; use an MCP client, not a browser page fetch. No subscriptions are offered.
 
 Public HTTP(S) browser origins can read documentation without credentials; opaque
@@ -115,7 +114,7 @@ An SDK-level integration test does not prove every agent client's UI behavior.
 
 ## Deploy and operate
 
-See [deploy/README.md](deploy/README.md). The standalone infrastructure has no
-analytics/database permissions. Updating website docs updates the catalog; no MCP
+The service runs on standalone infrastructure with no access to analytics or customer
+data. Updating website docs updates the catalog; no MCP
 server redeploy is needed for documentation-only changes. No npm publication is
 required. Licensed under MIT.

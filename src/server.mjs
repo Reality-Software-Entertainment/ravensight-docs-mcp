@@ -50,7 +50,7 @@ export function createService({ store = createCatalogStore() } = {}) {
     if (url.pathname !== '/mcp') return Response.json({ error: 'Not found', endpoint: '/mcp', docs_url: DOCS_URL }, { status: 404, headers });
     if (request.method !== 'POST') return new Response(null, { status: 405, headers: { ...headers, allow: 'POST, OPTIONS' } });
     try {
-      // Subscriptions cannot be served by this bounded, stateless Lambda.
+      // Subscriptions cannot be served by this bounded, stateless service.
       // Bound bytes before parsing/inspecting so malformed oversized input is cheap.
       if (Number(request.headers.get('content-length')) > 16384) return new Response(null, { status: 413, headers });
       const bytes = await request.arrayBuffer();
