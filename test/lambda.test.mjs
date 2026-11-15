@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/catalog.json',import.meta.url)));
 const originalFetch=globalThis.fetch;
-globalThis.fetch=async url=>{assert.equal(url,'https://www.ravensight.io/docs/catalog.json');return Response.json(fixture);};
+globalThis.fetch=async url=>{assert.equal(url,'https://ravensight.io/docs/catalog.json');return Response.json(fixture);};
 const source=await import('../src/lambda.mjs');
 const bundle=await import('../dist/index.mjs');
 globalThis.fetch=originalFetch;

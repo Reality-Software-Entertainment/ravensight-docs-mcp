@@ -1,6 +1,6 @@
 # Ravensight documentation MCP
 
-Public, read-only access to the [Ravensight docs](https://www.ravensight.io/docs/).
+Public, read-only access to the [Ravensight docs](https://ravensight.io/docs/).
 
 **Endpoint:** `https://docs-mcp.ravensight.io/mcp` (remote HTTP, no authentication).
 Documentation reads are free. This service cannot access customer studios or player
@@ -67,9 +67,12 @@ requires the other. No analytics credentials are used by this service.
 
 ## Freshness and failure behavior
 
-The website build generates [catalog.json](https://www.ravensight.io/docs/catalog.json)
-from its public documentation HTML. This service fetches only that fixed URL,
-validates document and catalog hashes, and caches it for five minutes per instance.
+The website build generates [catalog.json](https://ravensight.io/docs/catalog.json)
+from its public documentation HTML. This service fetches only that fixed URL, on the
+apex host because `www.ravensight.io` redirects there and a redirect is refused. It
+accepts a catalog whose records link to either host while the website build still
+writes `www` links. It validates document and catalog hashes, and caches it for five
+minutes per instance.
 Responses include `catalog_revision`, `checked_at`, and `stale`. Content revisions
 are hashes, not claims about SDK release versions or timestamps.
 
