@@ -1,17 +1,24 @@
 import { createHash } from 'node:crypto';
-export const CATALOG_URL = 'https://www.ravensight.io/docs/catalog.json';
-export const DOCS_URL = 'https://www.ravensight.io/docs/';
+// The apex is the site's canonical host: www.ravensight.io redirects to it, and
+// a catalog fetch refuses redirects, so the catalog is read from the apex.
+export const DOCS_URL = 'https://ravensight.io/docs/';
+export const CATALOG_URL = DOCS_URL + 'catalog.json';
+// The hosts a catalog's records may name. The website build still writes
+// www links into the catalog; both forms are this site, and a record always
+// has to start with its own catalog's source_url. Drop the www entry once the
+// published catalog names the apex.
+export const SOURCE_URLS = Object.freeze([DOCS_URL, 'https://www.ravensight.io/docs/']);
 const MAX_BYTES = 2 * 1024 * 1024;
 const sha = s => createHash('sha256').update(s).digest('hex');
 const stable = x => Array.isArray(x) ? x.map(stable) : x && typeof x === 'object' ? Object.fromEntries(Object.keys(x).sort().map(k => [k, stable(x[k])])) : x;
 export function validateCatalog(value) {
-  if (value?.schema_version !== 1 || value.source_url !== DOCS_URL || !/^[a-f0-9]{64}$/.test(value.revision) || !Array.isArray(value.documents) || !value.documents.length || value.documents.length > 500) throw new Error('Invalid documentation catalog');
+  if (value?.schema_version !== 1 || !SOURCE_URLS.includes(value?.source_url) || !/^[a-f0-9]{64}$/.test(value.revision) || !Array.isArray(value.documents) || !value.documents.length || value.documents.length > 500) throw new Error('Invalid documentation catalog');
   const ids = new Set();
   for (const d of value.documents) {
     if (!d || typeof d.id !== 'string' || !/^[a-z0-9/-]{1,200}$/.test(d.id) || ids.has(d.id)) throw new Error('Invalid documentation ID');
     ids.add(d.id);
     for (const key of ['section', 'section_title', 'title', 'content', 'url', 'revision']) if (typeof d[key] !== 'string' || !d[key]) throw new Error('Incomplete documentation record');
-    if (d.content.length > 150000 || d.title.length > 500 || d.section_title.length > 500 || d.url.length > 500 || !d.url.startsWith(DOCS_URL + '#') || d.revision !== sha(d.content)) throw new Error('Invalid documentation content');
+    if (d.content.length > 150000 || d.title.length > 500 || d.section_title.length > 500 || d.url.length > 500 || !d.url.startsWith(value.source_url + '#') || d.revision !== sha(d.content)) throw new Error('Invalid documentation content');
   }
   if (sha(JSON.stringify(stable(value.documents))) !== value.revision) throw new Error('Documentation revision mismatch');
   return value;

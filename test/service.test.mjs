@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { once } from 'node:events';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
-import { createCatalogStore, validateCatalog, CATALOG_URL } from '../src/catalog.mjs';
+import { createHash } from 'node:crypto';
+import { createCatalogStore, validateCatalog, CATALOG_URL, DOCS_URL } from '../src/catalog.mjs';
 import { search, getDoc } from '../src/retrieval.mjs';
 import { createService } from '../src/server.mjs';
 import { listen } from '../src/local.mjs';
@@ -15,6 +16,37 @@ test('validates the real public catalog and refuses corrupted content', () => {
   assert.equal(validateCatalog(fixture).documents.length > 100, true);
   const bad = structuredClone(fixture); bad.documents[0].content += 'wrong';
   assert.throws(() => validateCatalog(bad));
+});
+
+// A copy of the fixture whose records name another docs host, re-hashed the way
+// the website build hashes it, so only the host differs.
+const sha = s => createHash('sha256').update(s).digest('hex');
+const stable = x => Array.isArray(x) ? x.map(stable) : x && typeof x === 'object' ? Object.fromEntries(Object.keys(x).sort().map(k => [k, stable(x[k])])) : x;
+const onHost = (catalog, from, to) => {
+  const copy = structuredClone(catalog);
+  copy.source_url = to;
+  for (const d of copy.documents) d.url = to + d.url.slice(from.length);
+  copy.revision = sha(JSON.stringify(stable(copy.documents)));
+  return copy;
+};
+
+test('reads the catalog from the apex host, the one address that is never redirected', () => {
+  assert.equal(DOCS_URL, 'https://ravensight.io/docs/');
+  assert.equal(CATALOG_URL, 'https://ravensight.io/docs/catalog.json');
+});
+
+test('accepts a catalog whose records name the apex or the www host, and no other', () => {
+  const www = 'https://www.ravensight.io/docs/';
+  assert.equal(fixture.source_url, www);
+  const apex = onHost(fixture, www, DOCS_URL);
+  assert.equal(validateCatalog(apex).documents.length, fixture.documents.length);
+  assert.throws(() => validateCatalog(onHost(fixture, www, 'https://docs.example.com/docs/')), /Invalid documentation catalog/);
+  assert.throws(() => validateCatalog(onHost(fixture, www, 'http://ravensight.io/docs/')), /Invalid documentation catalog/);
+  // A record has to start with its own catalog's source_url, not just either host.
+  const mixed = structuredClone(apex);
+  mixed.documents[0].url = www + mixed.documents[0].url.slice(DOCS_URL.length);
+  mixed.revision = sha(JSON.stringify(stable(mixed.documents)));
+  assert.throws(() => validateCatalog(mixed), /Invalid documentation content/);
 });
 
 test('representative integration questions find the relevant public docs', () => {
@@ -67,7 +99,7 @@ test('cache coalesces refreshes, marks stale results, and expires safely during 
 
 test('cold outages and oversized catalogs fail with the website fallback', async () => {
   for (const fetcher of [async()=>{throw Error();},async()=>new Response('x'.repeat(2*1024*1024+1),{headers:{'content-type':'application/json'}}),async()=>Response.json({})]) {
-    await assert.rejects(createCatalogStore({fetcher}).get(), /https:\/\/www.ravensight.io\/docs\//);
+    await assert.rejects(createCatalogStore({fetcher}).get(), /Read https:\/\/ravensight\.io\/docs\/ or retry/);
   }
 });
 
