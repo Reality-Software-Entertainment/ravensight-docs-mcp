@@ -11,7 +11,9 @@
   "scripts": {
     "start": "node src/local.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "prepare": "node -e \"try{require('child_process').execFileSync('git',['config','core.hooksPath','.githooks'],{stdio:'ignore'})}catch(e){}\""
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.1",
